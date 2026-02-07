@@ -3,29 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GTA Indonesia - GitHub Edition</title>
+    <title>GTA Indonesia Web</title>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser-arcade-physics.min.js"></script>
     <style>
-        body { margin: 0; background: #000; overflow: hidden; font-family: 'Courier New', Courier, monospace; }
-        #game-ui {
+        body { margin: 0; background: #000; overflow: hidden; font-family: sans-serif; }
+        #ui {
             position: absolute; top: 20px; left: 20px;
-            color: #fff; z-index: 10; pointer-events: none;
+            color: white; z-index: 10; pointer-events: none;
+            text-shadow: 2px 2px #000;
         }
-        .busted {
-            display: none; position: absolute; top: 50%; left: 50%;
+        .stars { color: #ffff00; font-size: 30px; margin: 5px 0; }
+        #busted {
+            display: none; position: fixed; top: 50%; left: 50%;
             transform: translate(-50%, -50%); color: #ff0000;
-            font-size: 80px; font-weight: bold; text-shadow: 5px 5px #000;
+            font-size: 80px; font-weight: bold; z-index: 20;
         }
     </style>
 </head>
 <body>
 
-    <div id="game-ui">
-        <h2 id="loc-name">MENGHUBUNGKAN...</h2>
-        <h1 id="stars" style="color: #ffff00; margin: 0;"></h1>
-        <p>Gunakan WASD/Panah untuk Jalan | SPACE untuk Kriminal</p>
+    <div id="ui">
+        <div id="loc">Menghubungkan...</div>
+        <div id="star-display" class="stars"></div>
+        <div style="font-size: 12px; opacity: 0.8;">WASD: Jalan | SPACE: Kriminal</div>
     </div>
-    <div id="busted-screen" class="busted">BUSTED</div>
+    <div id="busted">BUSTED</div>
 
     <script src="maps.js"></script>
     <script src="scripts.js"></script>
@@ -37,15 +39,11 @@
             height: window.innerHeight,
             physics: {
                 default: 'arcade',
-                arcade: { gravity: { y: 0 }, debug: false }
+                arcade: { debug: false }
             },
             scene: GameScene
         };
-        const game = new Phaser.Game(config);
-
-        window.addEventListener('resize', () => {
-            game.scale.resize(window.innerWidth, window.innerHeight);
-        });
+        new Phaser.Game(config);
     </script>
 </body>
 </html>
