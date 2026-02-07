@@ -6,48 +6,39 @@
     <title>GTA Indonesia Mobile</title>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser-arcade-physics.min.js"></script>
     <style>
-        body { margin: 0; background: #000; overflow: hidden; touch-action: none; font-family: 'Arial', sans-serif; }
-        #ui {
-            position: absolute; top: 15px; left: 15px;
-            color: white; z-index: 10; pointer-events: none;
-            text-shadow: 2px 2px #000;
+        body { margin: 0; background: #000; overflow: hidden; touch-action: none; font-family: sans-serif; }
+        #game-ui {
+            position: absolute; top: 10px; left: 10px; color: white; 
+            z-index: 10; pointer-events: none; text-shadow: 2px 2px #000;
         }
-        .stars { color: #ffff00; font-size: 24px; font-weight: bold; }
+        .stars { color: #ffff00; font-size: 24px; margin-top: 5px; }
         #busted {
             display: none; position: fixed; top: 50%; left: 50%;
             transform: translate(-50%, -50%); color: #ff0000;
-            font-size: 60px; font-weight: bold; z-index: 20; text-shadow: 4px 4px #000;
+            font-size: 70px; font-weight: bold; z-index: 20; text-shadow: 3px 3px #000;
         }
     </style>
 </head>
 <body>
-
-    <div id="ui">
-        <div id="loc" style="font-weight: bold; letter-spacing: 1px;">MEMUAT PETA...</div>
+    <div id="game-ui">
+        <div id="loc" style="font-weight: bold;">MEMUAT...</div>
         <div id="star-display" class="stars"></div>
-        <div style="font-size: 10px; opacity: 0.7;">HP: Sentuh & Tahan Layar | PC: WASD</div>
+        <div style="font-size: 10px; opacity: 0.8;">TAP LAYAR UNTUK JALAN | SPASI: KRIMINAL</div>
     </div>
     <div id="busted">BUSTED</div>
 
     <script src="maps.js"></script>
     <script src="scripts.js"></script>
-
     <script>
         const config = {
             type: Phaser.AUTO,
             width: window.innerWidth,
             height: window.innerHeight,
-            physics: {
-                default: 'arcade',
-                arcade: { debug: false }
-            },
+            physics: { default: 'arcade', arcade: { debug: false } },
             scene: GameScene,
-            scale: {
-                mode: Phaser.Scale.RESIZE,
-                autoCenter: Phaser.Scale.CENTER_BOTH
-            }
+            scale: { mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.CENTER_BOTH }
         };
-        const game = new Phaser.Game(config);
+        new Phaser.Game(config);
     </script>
 </body>
 </html>
