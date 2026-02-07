@@ -5,76 +5,102 @@ class GameScene extends Phaser.Scene {
     }
 
     preload() {
-        // MENGGUNAKAN ASET MOTOR (Top-Down View)
-        // Kamu bisa ganti URL ini dengan aset motor lokal di folder assets/ nanti
-        this.load.image('motor', 'https://labs.phaser.io/assets/sprites/car-red.png'); // Placeholder motor
-        this.load.image('polisi', 'https://labs.phaser.io/assets/sprites/car-yellow.png'); 
+        // Menggunakan aset gambar motor dari Phaser Lab (Bisa kamu ganti nanti)
+        this.load.image('motor', 'https://labs.phaser.io/assets/sprites/car-red.png');
+        this.load.image('polisi', 'https://labs.phaser.io/assets/sprites/car-yellow.png');
     }
 
     create() {
-        // ... (kode background map tetap sama seperti sebelumnya) ...
-        let bg = this.add.graphics();
-        bg.fillStyle(MapData.city.groundColor, 1);
-        bg.fillRect(0, 0, MapData.dividerX, MapData.height);
-        bg.fillStyle(MapData.village.groundColor, 1);
-        bg.fillRect(MapData.dividerX, 0, MapData.width - MapData.dividerX, MapData.height);
+        // 1. Gambar Tanah (Maps)
+        let graphics = this.add.graphics();
+        // Kota
+        graphics.fillStyle(MapData.city.color, 1);
+        graphics.fillRect(0, 0, MapData.border, MapData.height);
+        // Desa
+        graphics.fillStyle(MapData.village.color, 1);
+        graphics.fillRect(MapData.border, 0, MapData.width - MapData.border, MapData.height);
+        // Garis Batas
+        graphics.lineStyle(15, 0xffff00, 0.8);
+        graphics.lineBetween(MapData.border, 0, MapData.border, MapData.height);
 
-        // 1. PLAYER SEBAGAI MOTOR
-        // Kita pakai sprite supaya bisa ganti gambar
+        // 2. Player (Motor)
         this.player = this.physics.add.sprite(500, 500, 'motor');
-        this.player.setScale(0.8); // Ukuran motor disesuaikan
+        this.player.setScale(0.8);
         this.player.setCollideWorldBounds(true);
 
-        // 2. GROUP POLISI
+        // 3. Polisi Group
         this.polices = this.physics.add.group();
 
-        // 3. KAMERA
-        this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
+        // 4. Kamera
+        this.cameras.main.setBounds(0, 0, MapData.width, MapData.height);
         this.physics.world.setBounds(0, 0, MapData.width, MapData.height);
+        this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
 
-        // 4. INPUT
+        // 5. Kontrol
         this.cursors = this.input.keyboard.createCursorKeys();
         this.keys = this.input.keyboard.addKeys('W,A,S,D');
 
-        // Tabrakan
-        this.physics.add.overlap(this.player, this.polices, this.onBusted, null, this);
+        // Deteksi Tabrakan
+        this.physics.add.overlap(this.player, this.polices, this.handleBusted, null, this);
     }
 
     update() {
-        let speed = 400;
+        let speed = 450;
         this.player.setVelocity(0);
 
-        // Logika Gerak Motor (WASD / Panah)
+        // Gerak Motor & Rotasi
         if (this.cursors.left.isDown || this.keys.A.isDown) {
             this.player.setVelocityX(-speed);
-            this.player.setAngle(-90); // Putar motor ke kiri
+            this.player.setAngle(-90);
         } else if (this.cursors.right.isDown || this.keys.D.isDown) {
             this.player.setVelocityX(speed);
-            this.player.setAngle(90); // Putar motor ke kanan
+            this.player.setAngle(90);
         }
-
         if (this.cursors.up.isDown || this.keys.W.isDown) {
             this.player.setVelocityY(-speed);
-            this.player.setAngle(0); // Putar motor ke atas
+            this.player.setAngle(0);
         } else if (this.cursors.down.isDown || this.keys.S.isDown) {
             this.player.setVelocityY(speed);
-            this.player.setAngle(180); // Putar motor ke bawah
+            this.player.setAngle(180);
         }
 
-        // ... (sisanya sama: cek lokasi & spawn polisi) ...
+        // Cek Nama Lokasi
+        let currentLoc = this.player.x < MapData.border ? MapData.city.name : MapData.village.name;
+        document.getElementById('loc').innerText = currentLoc;
+
+        // Bikin Kriminal (Tambah Bintang)
         if (Phaser.Input.Keyboard.JustDown(this.cursors.space)) {
-            this.triggerCrime();
+            this.doCrime();
+        }
+
+        // Logika Polisi Mengejar
+        this.polices.children.iterate((p) => {
+            this.physics.moveToObject(p, this.player, 300 + (this.wantedLevel * 20));
+            p.rotation = Phaser.Math.Angle.Between(p.x, p.y, this.player.x, this.player.y) + Math.PI/2;
+        });
+    }
+
+    doCrime() {
+        if (this.wantedLevel < 5) {
+            this.wantedLevel++;
+            document.getElementById('star-display').innerText = '⭐'.repeat(this.wantedLevel);
+            this.spawnPolice();
         }
     }
 
     spawnPolice() {
-        let spawnX = this.player.x + (Math.random() > 0.5 ? 600 : -600);
-        let spawnY = this.player.y + (Math.random() > 0.5 ? 600 : -600);
-        
-        let p = this.polices.create(spawnX, spawnY, 'polisi');
-        p.setTint(0x0000ff); // Mobil polisi jadi biru
+        let x = this.player.x + Phaser.Math.Between(-800, 800);
+        let y = this.player.y + Phaser.Math.Between(-800, 800);
+        let p = this.polices.create(x, y, 'polisi');
+        p.setTint(0x0000ff);
         p.setScale(0.8);
     }
-    
-    // ... (fungsi triggerCrime dan onBusted tetap sama) ...
-          }
+
+    handleBusted() {
+        if (this.wantedLevel > 0) {
+            this.physics.pause();
+            document.getElementById('busted').style.display = 'block';
+            setTimeout(() => { location.reload(); }, 2500);
+        }
+    }
+    }
