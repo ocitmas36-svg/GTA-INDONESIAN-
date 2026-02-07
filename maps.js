@@ -1,9 +1,9 @@
 const MapData = {
-    width: 6000,
-    height: 4000,
-    border: 3000, // Garis tengah Kota vs Desa
+    width: 5000,
+    height: 3000,
+    border: 2500, 
     city: {
-        name: "PUSAT KOTA JAYAKARTA",
+        name: "KOTA JAYAKARTA",
         color: 0x333333
     },
     village: {
