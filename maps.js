@@ -1,15 +1,13 @@
 const MapData = {
-    width: 5000,
-    height: 3000,
-    dividerX: 2500, // Garis tengah pembatas kota & desa
+    width: 6000,
+    height: 4000,
+    border: 3000, // Garis tengah Kota vs Desa
     city: {
-        name: "KOTA JAYAKARTA",
-        groundColor: 0x333333, // Aspal Kelabu
-        lineColor: 0xffffff
+        name: "PUSAT KOTA JAYAKARTA",
+        color: 0x333333
     },
     village: {
         name: "DESA BOJONG GEDE",
-        groundColor: 0x1b5e20, // Hijau Tua (Sawah/Kebun)
-        lineColor: 0x795548
+        color: 0x228B22
     }
 };
