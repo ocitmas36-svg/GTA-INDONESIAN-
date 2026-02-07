@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTA Indonesia - Web Version</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser-arcade-physics.min.js"></script>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #222; }
+        canvas { display: block; margin: 0 auto; }
+        #ui {
+            position: absolute; top: 10px; left: 10px;
+            color: white; font-family: Arial, sans-serif;
+            background: rgba(0,0,0,0.5); padding: 10px; border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ui">
+        <b>GTA Indonesia: Project Jayakarta</b><br>
+        Gunakan Panah / WASD untuk bergerak<br>
+        Lokasi: <span id="location">Mencari Posisi...</span>
+    </div>
+
+    <script>
+        const config = {
+            type: Phaser.AUTO,
+            width: window.innerWidth,
+            height: window.innerHeight,
+            physics: {
+                default: 'arcade',
+                arcade: { gravity: { y: 0 }, debug: false }
+            },
+            scene: { preload: preload, create: create, update: update }
+        };
+
+        const game = new Phaser.Game(config);
+        let player;
+        let cursors;
+        let locationText;
+
+        function preload() {
+            // Placeholder aset (Kita pakai gambar dasar dulu agar langsung jalan)
+            this.load.image('car', 'https://labs.phaser.io/assets/sprites/car-red.png');
+            this.load.image('road_city', 'https://labs.phaser.io/assets/skies/space3.png'); // Contoh aspal kota
+        }
+
+        function create() {
+            // 1. Membuat Dunia yang Luas (Peta)
+            // Area Kota (0 sampai 2000) dan Area Desa (2000 sampai 4000)
+            this.cameras.main.setBounds(0, 0, 4000, 2000);
+            this.physics.world.setBounds(0, 0, 4000, 2000);
+
+            // Visual sederhana untuk membedakan Kota dan Desa
+            let graphics = this.add.graphics();
+            
+            // Kota: Abu-abu (Aspal Mulus)
+            graphics.fillStyle(0x444444, 1);
+            graphics.fillRect(0, 0, 2000, 2000);
+            
+            // Desa: Hijau/Coklat (Tanah/Sawah)
+            graphics.fillStyle(0x228B22, 1);
+            graphics.fillRect(2000, 0, 2000, 2000);
+
+            // Tambahkan "Garis Pembatas" (Gerbang Tol/Gapura)
+            graphics.lineStyle(20, 0xFFFF00, 1);
+            graphics.lineBetween(2000, 0, 2000, 2000);
+
+            // 2. Pemain (Karakter/Kendaraan)
+            player = this.physics.add.sprite(500, 500, 'car');
+            player.setCollideWorldBounds(true);
+            player.setAngle(90); // Hadap depan
+
+            // 3. Kamera
+            this.cameras.main.startFollow(player, true, 0.1, 0.1);
+            this.cameras.main.setZoom(1);
+
+            // 4. Input Kontrol
+            cursors = this.input.keyboard.createCursorKeys();
+            locationText = document.getElementById('location');
+        }
+
+        function update() {
+            player.setVelocity(0);
+
+            // Logika Pergerakan
+            if (cursors.left.isDown) {
+                player.setVelocityX(-300);
+                player.setAngle(-90);
+            } else if (cursors.right.isDown) {
+                player.setVelocityX(300);
+                player.setAngle(90);
+            }
+
+            if (cursors.up.isDown) {
+                player.setVelocityY(-300);
+                player.setAngle(0);
+            } else if (cursors.down.isDown) {
+                player.setVelocityY(300);
+                player.setAngle(180);
+            }
+
+            // Update UI Lokasi berdasarkan koordinat X
+            if (player.x < 2000) {
+                locationText.innerText = "Pusat Kota Jayakarta";
+                locationText.style.color = "#00fbff";
+            } else {
+                locationText.innerText = "Desa Bojong Gede";
+                locationText.style.color = "#5bff00";
+            }
+        }
+
+        window.addEventListener('resize', () => {
+            game.scale.resize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
