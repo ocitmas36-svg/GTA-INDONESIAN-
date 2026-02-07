@@ -3,38 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GTA Indonesia: Night Rider</title>
+    <title>GTA Indonesia - Project Jayakarta</title>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser-arcade-physics.min.js"></script>
     <style>
-        body { margin: 0; background: #000; overflow: hidden; touch-action: none; font-family: 'Courier New', Courier, monospace; }
+        body { margin: 0; background: #000; overflow: hidden; touch-action: none; font-family: sans-serif; }
         #ui {
-            position: absolute; top: 15px; left: 15px; color: #00ff00; 
-            z-index: 10; pointer-events: none; text-shadow: 1px 1px #000;
+            position: absolute; top: 15px; left: 15px; color: #fff; 
+            z-index: 10; pointer-events: none; text-shadow: 2px 2px #000;
         }
-        .stars { color: #ffff00; font-size: 26px; }
         #busted {
             display: none; position: fixed; top: 50%; left: 50%;
             transform: translate(-50%, -50%); color: #ff0000;
-            font-size: 70px; font-weight: bold; z-index: 20; text-shadow: 5px 5px #000;
+            font-size: 60px; font-weight: bold; z-index: 20; text-shadow: 3px 3px #000;
         }
     </style>
 </head>
 <body>
     <div id="ui">
-        <div id="loc" style="font-size: 18px;">GPS: SCANNING...</div>
-        <div id="star-display" class="stars"></div>
-        <div style="font-size: 10px; color: white;">TOUCH TO DRIVE | SPACE TO CRIME</div>
+        <div id="loc" style="font-weight: bold; font-size: 20px;">GPS: LOADING...</div>
+        <div id="star-display" style="color: yellow; font-size: 25px;"></div>
+        <div style="font-size: 12px; opacity: 0.8;">TAP LAYAR: JALAN | SPASI: BURON</div>
     </div>
-    <div id="busted">BUSTED</div>
+    <div id="busted">TERCIDUK</div>
 
-    <script src="maps.js"></script>
-    <script src="scripts.js"></script>
     <script>
+        // SEMUA LOGIKA JADI SATU DI SINI
+        class GameScene extends Phaser.Scene {
+            constructor() { super('GameScene'); this.wantedLevel = 0; }
+
+            preload() {
+                this.load.image('motor', 'https://labs.phaser.io/assets/sprites/car-red.png');
+                this.load.image('polisi', 'https://labs.phaser.io/assets/sprites/car-yellow.png');
+            }
+
+            create() {
+                // Background & Map
+                let graphics = this.add.graphics();
+                graphics.fillStyle(0x333333, 1); // Kota
+                graphics.fillRect(0, 0, 2500, 3000);
+                graphics.fillStyle(0x228B22, 1); // Desa
+                graphics.fillRect(2500, 0, 2500, 3000);
+                
+                // Player
+                this.player = this.physics.add.sprite(500, 500, 'motor').setScale(0.8);
+                this.player.setCollideWorldBounds(true);
+
+                // Polisi
+                this.polices = this.physics.add.group();
+
+                // Kamera
+                this.cameras.main.setBounds(0, 0, 5000, 3000);
+                this.physics.world.setBounds(0, 0, 5000, 3000);
+                this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
+
+                // Kontrol
+                this.cursors = this.input.keyboard.createCursorKeys();
+                this.physics.add.overlap(this.player, this.polices, this.handleBusted, null, this);
+            }
+
+            update() {
+                const speed = 400;
+                let isMoving = false;
+
+                // Gerak HP (Tap)
+                if (this.input.activePointer.isDown) {
+                    this.physics.moveToObject(this.player, this.input.activePointer, speed);
+                    this.player.rotation = Phaser.Math.Angle.Between(this.player.x, this.player.y, this.input.activePointer.worldX, this.input.activePointer.worldY) + Math.PI/2;
+                    isMoving = true;
+                } 
+
+                // Gerak Keyboard
+                if (!isMoving) {
+                    this.player.setVelocity(0);
+                    if (this.cursors.left.isDown) { this.player.setVelocityX(-speed); this.player.angle = -90; }
+                    else if (this.cursors.right.isDown) { this.player.setVelocityX(speed); this.player.angle = 90; }
+                    if (this.cursors.up.isDown) { this.player.setVelocityY(-speed); this.player.angle = 0; }
+                    else if (this.cursors.down.isDown) { this.player.setVelocityY(speed); this.player.angle = 180; }
+                }
+
+                // Update UI Lokasi
+                let locName = this.player.x < 2500 ? "KOTA JAYAKARTA" : "DESA BOJONG GEDE";
+                document.getElementById('loc').innerText = "GPS: " + locName;
+
+                // Spasi buat nambah Wanted (Laptop)
+                if (Phaser.Input.Keyboard.JustDown(this.cursors.space)) { this.addWanted(); }
+
+                // Polisi ngejar
+                this.polices.children.iterate((p) => {
+                    if (p) {
+                        this.physics.moveToObject(p, this.player, 280);
+                        p.rotation = Phaser.Math.Angle.Between(p.x, p.y, this.player.x, this.player.y) + Math.PI/2;
+                    }
+                });
+            }
+
+            addWanted() {
+                if (this.wantedLevel < 5) {
+                    this.wantedLevel++;
+                    document.getElementById('star-display').innerText = '⭐'.repeat(this.wantedLevel);
+                    let p = this.polices.create(this.player.x + 600, this.player.y + 600, 'polisi');
+                    p.setTint(0x0000ff);
+                }
+            }
+
+            handleBusted() {
+                if (this.wantedLevel > 0) {
+                    this.physics.pause();
+                    document.getElementById('busted').style.display = 'block';
+                    setTimeout(() => { location.reload(); }, 2000);
+                }
+            }
+        }
+
         const config = {
             type: Phaser.AUTO,
             width: window.innerWidth,
             height: window.innerHeight,
-            physics: { default: 'arcade', arcade: { debug: false } },
+            physics: { default: 'arcade' },
             scene: GameScene,
             scale: { mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.CENTER_BOTH }
         };
